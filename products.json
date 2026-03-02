@@ -1,0 +1,18 @@
+[
+  {
+    "name": "Test Hay",
+    "category": "hay",
+    "description": "Sample product - edit products.json to update",
+    "price": "$8/bale",
+    "image": "/images/IMG_7197.jpg",
+    "inStock": true
+  },
+  {
+    "name": "Alfalfa Square Bales",
+    "category": "hay",
+    "description": "Fresh cut alfalfa, barn stored",
+    "price": "$12/bale",
+    "image": "/images/IMG_9174.jpg",
+    "inStock": true
+  }
+]
