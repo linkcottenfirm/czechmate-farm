@@ -228,7 +228,6 @@
                 const { data, error } = await supabase
                     .from('products')
                     .select('*')
-                    .not('name', 'like', '__CATEGORY_%')
                     .order('created_at', { ascending: false });
                 
                 if (error) throw error;
@@ -377,31 +376,36 @@
         async function loadCategoryImages() {
             try {
                 const { data } = await supabase
-                    .from('products')
-                    .select('name, image_url')
-                    .like('name', '__CATEGORY_%');
+                    .from('site_settings')
+                    .select('key, value')
+                    .in('key', ['cat_hay_image', 'cat_shavings_image', 'cat_grain_image']);
                 if (!data) return;
-                data.forEach(p => {
-                    const cat = p.name.replace('__CATEGORY_', '');
-                    const fieldId = 'cat' + cat.charAt(0).toUpperCase() + cat.slice(1) + 'Image';
-                    const el = document.getElementById(fieldId);
-                    if (el && p.image_url) {
-                        el.value = p.image_url;
-                        previewCatImage(cat);
+                data.forEach(s => {
+                    if (s.key === 'cat_hay_image' && s.value) {
+                        document.getElementById('catHayImage').value = s.value;
+                        previewCatImage('hay');
+                    }
+                    if (s.key === 'cat_shavings_image' && s.value) {
+                        document.getElementById('catShavingsImage').value = s.value;
+                        previewCatImage('shavings');
+                    }
+                    if (s.key === 'cat_grain_image' && s.value) {
+                        document.getElementById('catGrainImage').value = s.value;
+                        previewCatImage('grain');
                     }
                 });
-            } catch (e) { /* no category records yet */ }
+            } catch (e) { /* table may not exist yet */ }
         }
 
         async function saveCategoryImages() {
-            const cats = ['hay', 'shavings', 'grain'];
+            const settings = [
+                { key: 'cat_hay_image', value: document.getElementById('catHayImage').value.trim() },
+                { key: 'cat_shavings_image', value: document.getElementById('catShavingsImage').value.trim() },
+                { key: 'cat_grain_image', value: document.getElementById('catGrainImage').value.trim() }
+            ];
             try {
-                for (const cat of cats) {
-                    const url = document.getElementById('cat' + cat.charAt(0).toUpperCase() + cat.slice(1) + 'Image').value.trim();
-                    await supabase
-                        .from('products')
-                        .update({ image_url: url || null })
-                        .eq('name', '__CATEGORY_' + cat);
+                for (const s of settings) {
+                    await supabase.from('site_settings').update({ value: s.value }).eq('key', s.key);
                 }
                 showAlert('✓ Category photos saved! Changes are live on the homepage.', 'success');
             } catch (err) {

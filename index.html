@@ -234,20 +234,18 @@
         
         loadProducts();
 
-        // Load custom category images from DB
+        // Load custom category images from site_settings
         async function loadCategoryImages() {
             try {
                 const { data } = await supabase
-                    .from('products')
-                    .select('name, image_url')
-                    .like('name', '__CATEGORY_%');
+                    .from('site_settings')
+                    .select('key, value')
+                    .in('key', ['cat_hay_image', 'cat_shavings_image', 'cat_grain_image']);
                 if (!data) return;
-                data.forEach(p => {
-                    const cat = p.name.replace('__CATEGORY_', '');
-                    if (p.image_url) {
-                        const el = document.getElementById('cat-' + cat + '-img');
-                        if (el) el.src = p.image_url;
-                    }
+                data.forEach(s => {
+                    if (s.key === 'cat_hay_image' && s.value) document.getElementById('cat-hay-img').src = s.value;
+                    if (s.key === 'cat_shavings_image' && s.value) document.getElementById('cat-shavings-img').src = s.value;
+                    if (s.key === 'cat_grain_image' && s.value) document.getElementById('cat-grain-img').src = s.value;
                 });
             } catch (e) { /* use defaults */ }
         }
