@@ -105,6 +105,27 @@
             
             <div id="alert" class="alert" style="display: none;"></div>
             
+            <div class="card">
+                <h2>🖼️ Category Photos</h2>
+                <p class="help-text" style="margin-bottom:1rem;">These appear on the homepage under "What We Offer." Paste an image URL to change them.</p>
+                <div class="form-group">
+                    <label>🌾 Hay Photo</label>
+                    <input type="url" id="catHayImage" placeholder="Paste image URL" oninput="previewCatImage('hay')">
+                    <div class="image-preview" id="catHayPreview"></div>
+                </div>
+                <div class="form-group">
+                    <label>🪵 Shavings Photo</label>
+                    <input type="url" id="catShavingsImage" placeholder="Paste image URL" oninput="previewCatImage('shavings')">
+                    <div class="image-preview" id="catShavingsPreview"></div>
+                </div>
+                <div class="form-group">
+                    <label>🌽 Grain Photo</label>
+                    <input type="url" id="catGrainImage" placeholder="Paste image URL" oninput="previewCatImage('grain')">
+                    <div class="image-preview" id="catGrainPreview"></div>
+                </div>
+                <button class="btn btn-block" onclick="saveCategoryImages()">Save Category Photos</button>
+            </div>
+
             <div class="card" id="addProductCard">
                 <h2 id="formTitle">➕ Add New Product</h2>
                 <form id="productForm">
@@ -340,6 +361,62 @@
         }
         
         loadProducts();
+        loadCategoryImages();
+
+        function previewCatImage(cat) {
+            const url = document.getElementById('cat' + cat.charAt(0).toUpperCase() + cat.slice(1) + 'Image').value;
+            const preview = document.getElementById('cat' + cat.charAt(0).toUpperCase() + cat.slice(1) + 'Preview');
+            if (url) {
+                preview.innerHTML = `<img src="${url}" alt="Preview" onerror="this.parentElement.innerHTML='<p style=color:#dc3545;font-size:0.85rem>⚠️ Image not loading</p>'">`;
+            } else {
+                preview.innerHTML = '';
+            }
+        }
+
+        async function loadCategoryImages() {
+            try {
+                const { data, error } = await supabase
+                    .from('site_settings')
+                    .select('key, value')
+                    .in('key', ['cat_hay_image', 'cat_shavings_image', 'cat_grain_image']);
+                if (error || !data) return;
+                data.forEach(s => {
+                    if (s.key === 'cat_hay_image' && s.value) {
+                        document.getElementById('catHayImage').value = s.value;
+                        previewCatImage('hay');
+                    }
+                    if (s.key === 'cat_shavings_image' && s.value) {
+                        document.getElementById('catShavingsImage').value = s.value;
+                        previewCatImage('shavings');
+                    }
+                    if (s.key === 'cat_grain_image' && s.value) {
+                        document.getElementById('catGrainImage').value = s.value;
+                        previewCatImage('grain');
+                    }
+                });
+            } catch (e) { /* table may not exist */ }
+        }
+
+        async function saveCategoryImages() {
+            const settings = [
+                { key: 'cat_hay_image', value: document.getElementById('catHayImage').value.trim() },
+                { key: 'cat_shavings_image', value: document.getElementById('catShavingsImage').value.trim() },
+                { key: 'cat_grain_image', value: document.getElementById('catGrainImage').value.trim() }
+            ];
+            try {
+                for (const s of settings) {
+                    const { data: existing } = await supabase.from('site_settings').select('id').eq('key', s.key).single();
+                    if (existing) {
+                        await supabase.from('site_settings').update({ value: s.value }).eq('key', s.key);
+                    } else {
+                        await supabase.from('site_settings').insert([s]);
+                    }
+                }
+                showAlert('✓ Category photos saved!', 'success');
+            } catch (err) {
+                showAlert('Error saving: ' + err.message, 'error');
+            }
+        }
     </script>
 </body>
 </html>
