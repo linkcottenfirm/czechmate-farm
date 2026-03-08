@@ -185,7 +185,11 @@
         const SUPABASE_URL = 'https://biezyjqzclblrnfgnwca.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJpZXp5anF6Y2xibHJuZmdud2NhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0MDU3ODUsImV4cCI6MjA4Nzk4MTc4NX0.yr_xytBWEt57Lr6Py54YaWX0Kus5HZFqWsbrZF51das';
         
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        let supabaseClient = null;
+        try {
+            supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+        } catch(e) { console.warn('Supabase init failed:', e); }
+        const supabase = supabaseClient;
         let products = [];
         
         function login() {
