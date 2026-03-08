@@ -1,17 +1,25 @@
 [
   {
-    "name": "Test Hay",
+    "name": "Square Hay Bales",
     "category": "hay",
-    "description": "Sample product - edit products.json to update",
-    "price": "$8/bale",
+    "description": "Fresh cut, barn stored",
+    "price": "Call for pricing",
     "image": "/images/IMG_7197.jpg",
     "inStock": true
   },
   {
-    "name": "Alfalfa Square Bales",
+    "name": "Round Bales",
+    "category": "hay", 
+    "description": "Large round bales available",
+    "price": "Call for pricing",
+    "image": "/images/IMG_7192.jpg",
+    "inStock": true
+  },
+  {
+    "name": "Alfalfa Hay",
     "category": "hay",
-    "description": "Fresh cut alfalfa, barn stored",
-    "price": "$12/bale",
+    "description": "Premium alfalfa",
+    "price": "Call for pricing",
     "image": "/images/IMG_9174.jpg",
     "inStock": true
   }
