@@ -72,9 +72,16 @@
         .form-buttons { display: flex; gap: 0.5rem; }
         .form-buttons .btn { flex: 1; }
 
+        .cat-photo-row { margin-bottom: 1rem; }
+        .cat-photo-row label { margin-bottom: 0.5rem; }
+        .cat-photo-wrap { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+        .cat-photo-thumb { width: 120px; height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid #ddd; cursor: pointer; }
+        .cat-photo-thumb:hover { opacity: 0.8; }
+
         @media (max-width: 600px) {
             .product-item { flex-direction: column; text-align: center; }
             .product-item .actions { justify-content: center; }
+            .cat-photo-wrap { flex-direction: column; align-items: flex-start; }
         }
     </style>
 </head>
@@ -106,23 +113,35 @@
             
             <div class="card">
                 <h2>Category Photos</h2>
-                <p class="help-text" style="margin-bottom:1rem;">These appear on the homepage under "What We Offer." Paste an image URL to change them.</p>
-                <div class="form-group">
-                    <label>Hay Photo</label>
-                    <input type="url" id="catHayImage" placeholder="Paste image URL">
-                    <div class="image-preview" id="catHayPreview"></div>
+                <p class="help-text" style="margin-bottom:1rem;">These appear on the homepage under "What We Offer." Tap a photo or the button to change it.</p>
+                <div class="cat-photo-row" id="catHayRow">
+                    <label>Hay</label>
+                    <div class="cat-photo-wrap">
+                        <img id="catHayPreview" src="/images/IMG_7197.jpg" alt="Hay" class="cat-photo-thumb">
+                        <input type="hidden" id="catHayImage" value="">
+                        <input type="file" id="catHayFile" accept="image/*" style="display:none">
+                        <button type="button" class="btn btn-sm btn-edit" id="catHayBtn">Change Photo</button>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Shavings Photo</label>
-                    <input type="url" id="catShavingsImage" placeholder="Paste image URL">
-                    <div class="image-preview" id="catShavingsPreview"></div>
+                <div class="cat-photo-row" id="catShavingsRow">
+                    <label>Shavings</label>
+                    <div class="cat-photo-wrap">
+                        <img id="catShavingsPreview" src="/images/IMG_8115.jpg" alt="Shavings" class="cat-photo-thumb">
+                        <input type="hidden" id="catShavingsImage" value="">
+                        <input type="file" id="catShavingsFile" accept="image/*" style="display:none">
+                        <button type="button" class="btn btn-sm btn-edit" id="catShavingsBtn">Change Photo</button>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Grain Photo</label>
-                    <input type="url" id="catGrainImage" placeholder="Paste image URL">
-                    <div class="image-preview" id="catGrainPreview"></div>
+                <div class="cat-photo-row" id="catGrainRow">
+                    <label>Grain</label>
+                    <div class="cat-photo-wrap">
+                        <img id="catGrainPreview" src="/images/IMG_9174.jpg" alt="Grain" class="cat-photo-thumb">
+                        <input type="hidden" id="catGrainImage" value="">
+                        <input type="file" id="catGrainFile" accept="image/*" style="display:none">
+                        <button type="button" class="btn btn-sm btn-edit" id="catGrainBtn">Change Photo</button>
+                    </div>
                 </div>
-                <button class="btn btn-block" id="saveCatBtn">Save Category Photos</button>
+                <button class="btn btn-block" id="saveCatBtn" style="margin-top:1rem;">Save Category Photos</button>
             </div>
 
             <div class="card" id="addProductCard">
@@ -263,25 +282,40 @@
             }
         });
         
-        function previewCatImage(cat) {
+        // previewCatImage removed — file upload handles previews directly
+        
+        // --- Category Photo Upload ---
+        
+        function setupCatUpload(cat) {
             var capCat = cat.charAt(0).toUpperCase() + cat.slice(1);
-            var url = document.getElementById('cat' + capCat + 'Image').value;
+            var fileInput = document.getElementById('cat' + capCat + 'File');
+            var btn = document.getElementById('cat' + capCat + 'Btn');
             var preview = document.getElementById('cat' + capCat + 'Preview');
-            if (url) {
-                var img = document.createElement('img');
-                img.src = url;
-                img.alt = 'Preview';
-                img.onerror = function() { preview.innerHTML = '<p style="color:#dc3545;font-size:0.85rem">Image not loading</p>'; };
-                preview.innerHTML = '';
-                preview.appendChild(img);
-            } else {
-                preview.innerHTML = '';
-            }
+            var hidden = document.getElementById('cat' + capCat + 'Image');
+            
+            btn.addEventListener('click', function() { fileInput.click(); });
+            preview.addEventListener('click', function() { fileInput.click(); });
+            
+            fileInput.addEventListener('change', function() {
+                var file = fileInput.files[0];
+                if (!file) return;
+                if (file.size > 2 * 1024 * 1024) {
+                    showAlert('Image too large (max 2MB). Try a smaller photo.', 'error');
+                    return;
+                }
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    var dataUrl = e.target.result;
+                    preview.src = dataUrl;
+                    hidden.value = dataUrl;
+                };
+                reader.readAsDataURL(file);
+            });
         }
         
-        document.getElementById('catHayImage').addEventListener('input', function() { previewCatImage('hay'); });
-        document.getElementById('catShavingsImage').addEventListener('input', function() { previewCatImage('shavings'); });
-        document.getElementById('catGrainImage').addEventListener('input', function() { previewCatImage('grain'); });
+        setupCatUpload('hay');
+        setupCatUpload('shavings');
+        setupCatUpload('grain');
 
         // --- Products ---
         
@@ -458,15 +492,15 @@
                 result.data.forEach(function(s) {
                     if (s.key === 'cat_hay_image' && s.value) {
                         document.getElementById('catHayImage').value = s.value;
-                        previewCatImage('hay');
+                        document.getElementById('catHayPreview').src = s.value;
                     }
                     if (s.key === 'cat_shavings_image' && s.value) {
                         document.getElementById('catShavingsImage').value = s.value;
-                        previewCatImage('shavings');
+                        document.getElementById('catShavingsPreview').src = s.value;
                     }
                     if (s.key === 'cat_grain_image' && s.value) {
                         document.getElementById('catGrainImage').value = s.value;
-                        previewCatImage('grain');
+                        document.getElementById('catGrainPreview').src = s.value;
                     }
                 });
             } catch (e) { /* table may not exist yet */ }
@@ -474,18 +508,27 @@
         
         document.getElementById('saveCatBtn').addEventListener('click', async function() {
             if (!db) { showAlert('Database not connected', 'error'); return; }
+            var btn = document.getElementById('saveCatBtn');
+            btn.disabled = true;
+            btn.textContent = 'Saving...';
+            
             var settings = [
-                { key: 'cat_hay_image', value: document.getElementById('catHayImage').value.trim() },
-                { key: 'cat_shavings_image', value: document.getElementById('catShavingsImage').value.trim() },
-                { key: 'cat_grain_image', value: document.getElementById('catGrainImage').value.trim() }
+                { key: 'cat_hay_image', value: document.getElementById('catHayImage').value },
+                { key: 'cat_shavings_image', value: document.getElementById('catShavingsImage').value },
+                { key: 'cat_grain_image', value: document.getElementById('catGrainImage').value }
             ];
             try {
                 for (var i = 0; i < settings.length; i++) {
-                    await db.from('site_settings').update({ value: settings[i].value }).eq('key', settings[i].key);
+                    if (settings[i].value) {
+                        await db.from('site_settings').update({ value: settings[i].value }).eq('key', settings[i].key);
+                    }
                 }
                 showAlert('Category photos saved! Changes are live on the homepage.', 'success');
             } catch (err) {
                 showAlert('Error saving: ' + err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Save Category Photos';
             }
         });
         
