@@ -299,15 +299,28 @@
             fileInput.addEventListener('change', function() {
                 var file = fileInput.files[0];
                 if (!file) return;
-                if (file.size > 2 * 1024 * 1024) {
-                    showAlert('Image too large (max 2MB). Try a smaller photo.', 'error');
+                if (file.size > 10 * 1024 * 1024) {
+                    showAlert('Image too large (max 10MB). Try a smaller photo.', 'error');
                     return;
                 }
+                // Resize to max 1200px wide for fast page loads
                 var reader = new FileReader();
                 reader.onload = function(e) {
-                    var dataUrl = e.target.result;
-                    preview.src = dataUrl;
-                    hidden.value = dataUrl;
+                    var img = new Image();
+                    img.onload = function() {
+                        var canvas = document.createElement('canvas');
+                        var maxW = 1200;
+                        var w = img.width;
+                        var h = img.height;
+                        if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+                        canvas.width = w;
+                        canvas.height = h;
+                        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                        var dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+                        preview.src = dataUrl;
+                        hidden.value = dataUrl;
+                    };
+                    img.src = e.target.result;
                 };
                 reader.readAsDataURL(file);
             });
