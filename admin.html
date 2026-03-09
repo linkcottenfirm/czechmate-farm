@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - Czechmate Farm Supply</title>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Open Sans', sans-serif; background: #f5f5f5; min-height: 100vh; }
@@ -87,9 +86,9 @@
             <p class="subtitle">Manage your products</p>
             <div id="loginAlert" class="alert" style="display: none;"></div>
             <div class="form-group">
-                <input type="password" id="password" placeholder="Enter password" onkeypress="if(event.key==='Enter')login()">
+                <input type="password" id="password" placeholder="Enter password">
             </div>
-            <button class="btn btn-block" onclick="login()">Log In</button>
+            <button class="btn btn-block" id="loginBtn">Log In</button>
         </div>
     </div>
     
@@ -97,37 +96,37 @@
         <div class="container">
             <div class="admin-header">
                 <div>
-                    <a href="/" class="back-link">← Back to Website</a>
-                    <h1>🌾 Product Manager</h1>
+                    <a href="/" class="back-link">&larr; Back to Website</a>
+                    <h1>Product Manager</h1>
                 </div>
-                <button class="btn btn-secondary btn-sm" onclick="logout()">Log Out</button>
+                <button class="btn btn-secondary btn-sm" id="logoutBtn">Log Out</button>
             </div>
             
             <div id="alert" class="alert" style="display: none;"></div>
             
             <div class="card">
-                <h2>🖼️ Category Photos</h2>
+                <h2>Category Photos</h2>
                 <p class="help-text" style="margin-bottom:1rem;">These appear on the homepage under "What We Offer." Paste an image URL to change them.</p>
                 <div class="form-group">
-                    <label>🌾 Hay Photo</label>
-                    <input type="url" id="catHayImage" placeholder="Paste image URL" oninput="previewCatImage('hay')">
+                    <label>Hay Photo</label>
+                    <input type="url" id="catHayImage" placeholder="Paste image URL">
                     <div class="image-preview" id="catHayPreview"></div>
                 </div>
                 <div class="form-group">
-                    <label>🪵 Shavings Photo</label>
-                    <input type="url" id="catShavingsImage" placeholder="Paste image URL" oninput="previewCatImage('shavings')">
+                    <label>Shavings Photo</label>
+                    <input type="url" id="catShavingsImage" placeholder="Paste image URL">
                     <div class="image-preview" id="catShavingsPreview"></div>
                 </div>
                 <div class="form-group">
-                    <label>🌽 Grain Photo</label>
-                    <input type="url" id="catGrainImage" placeholder="Paste image URL" oninput="previewCatImage('grain')">
+                    <label>Grain Photo</label>
+                    <input type="url" id="catGrainImage" placeholder="Paste image URL">
                     <div class="image-preview" id="catGrainPreview"></div>
                 </div>
-                <button class="btn btn-block" onclick="saveCategoryImages()">Save Category Photos</button>
+                <button class="btn btn-block" id="saveCatBtn">Save Category Photos</button>
             </div>
 
             <div class="card" id="addProductCard">
-                <h2 id="formTitle">➕ Add New Product</h2>
+                <h2 id="formTitle">Add New Product</h2>
                 <form id="productForm">
                     <input type="hidden" id="editId" value="">
                     <div class="form-group">
@@ -137,10 +136,10 @@
                     <div class="form-group">
                         <label>Category</label>
                         <select id="category">
-                            <option value="hay">🌾 Hay</option>
-                            <option value="shavings">🪵 Shavings</option>
-                            <option value="grain">🌽 Grain</option>
-                            <option value="other">📦 Other</option>
+                            <option value="hay">Hay</option>
+                            <option value="shavings">Shavings</option>
+                            <option value="grain">Grain</option>
+                            <option value="other">Other</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -154,8 +153,8 @@
                     </div>
                     <div class="form-group">
                         <label>Image URL</label>
-                        <input type="url" id="imageUrl" placeholder="Paste image link from Google Photos or anywhere" oninput="previewImage()">
-                        <p class="help-text">Right-click any image online → Copy image address</p>
+                        <input type="url" id="imageUrl" placeholder="Paste image link from Google Photos or anywhere">
+                        <p class="help-text">Right-click any image online, then Copy image address</p>
                         <div class="image-preview" id="imagePreview"></div>
                     </div>
                     <div class="form-group">
@@ -166,13 +165,13 @@
                     </div>
                     <div class="form-buttons">
                         <button type="submit" class="btn" id="submitBtn">Add Product</button>
-                        <button type="button" class="btn btn-secondary" id="cancelBtn" style="display:none;" onclick="cancelEdit()">Cancel</button>
+                        <button type="button" class="btn btn-secondary" id="cancelBtn" style="display:none;">Cancel</button>
                     </div>
                 </form>
             </div>
             
             <div class="card">
-                <h2>📦 Your Products</h2>
+                <h2>Your Products</h2>
                 <div id="productList" class="product-list">
                     <div class="loading">Loading...</div>
                 </div>
@@ -180,92 +179,181 @@
         </div>
     </div>
     
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        const ADMIN_PASSWORD = 'Czechmate@2026.';
-        const SUPABASE_URL = 'https://biezyjqzclblrnfgnwca.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJpZXp5anF6Y2xibHJuZmdud2NhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0MDU3ODUsImV4cCI6MjA4Nzk4MTc4NX0.yr_xytBWEt57Lr6Py54YaWX0Kus5HZFqWsbrZF51das';
+    (function() {
+        var ADMIN_PASSWORD = 'Czechmate@2026.';
+        var SUPABASE_URL = 'https://biezyjqzclblrnfgnwca.supabase.co';
+        var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJpZXp5anF6Y2xibHJuZmdud2NhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0MDU3ODUsImV4cCI6MjA4Nzk4MTc4NX0.yr_xytBWEt57Lr6Py54YaWX0Kus5HZFqWsbrZF51das';
         
-        let supabaseClient = null;
+        var db = null;
         try {
-            supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+            if (window.supabase && window.supabase.createClient) {
+                db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            }
         } catch(e) { console.warn('Supabase init failed:', e); }
-        const supabase = supabaseClient;
-        let products = [];
         
-        function login() {
-            if (document.getElementById('password').value === ADMIN_PASSWORD) {
+        var products = [];
+
+        // --- Login / Logout ---
+        
+        var loginBtn = document.getElementById('loginBtn');
+        var logoutBtn = document.getElementById('logoutBtn');
+        var passwordInput = document.getElementById('password');
+        
+        function doLogin() {
+            if (passwordInput.value === ADMIN_PASSWORD) {
                 sessionStorage.setItem('czechmate_admin', 'true');
                 document.getElementById('loginScreen').style.display = 'none';
                 document.getElementById('adminScreen').style.display = 'block';
                 loadProducts();
+                loadCategoryImages();
             } else {
-                document.getElementById('loginAlert').textContent = 'Incorrect password';
-                document.getElementById('loginAlert').className = 'alert alert-error';
-                document.getElementById('loginAlert').style.display = 'block';
+                var alertEl = document.getElementById('loginAlert');
+                alertEl.textContent = 'Incorrect password';
+                alertEl.className = 'alert alert-error';
+                alertEl.style.display = 'block';
             }
         }
         
-        function logout() {
+        loginBtn.addEventListener('click', doLogin);
+        
+        passwordInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') doLogin();
+        });
+        
+        logoutBtn.addEventListener('click', function() {
             sessionStorage.removeItem('czechmate_admin');
             location.reload();
-        }
+        });
         
+        // Auto-login if session exists
         if (sessionStorage.getItem('czechmate_admin') === 'true') {
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('adminScreen').style.display = 'block';
+            loadProducts();
+            loadCategoryImages();
         }
         
-        function previewImage() {
-            const url = document.getElementById('imageUrl').value;
-            const preview = document.getElementById('imagePreview');
+        // --- Alert ---
+        
+        function showAlert(msg, type) {
+            var el = document.getElementById('alert');
+            el.textContent = msg;
+            el.className = 'alert alert-' + type;
+            el.style.display = 'block';
+            setTimeout(function() { el.style.display = 'none'; }, 4000);
+        }
+
+        // --- Image Previews ---
+        
+        var imageUrlInput = document.getElementById('imageUrl');
+        imageUrlInput.addEventListener('input', function() {
+            var url = imageUrlInput.value;
+            var preview = document.getElementById('imagePreview');
             if (url) {
-                preview.innerHTML = `<img src="${url}" alt="Preview" onerror="this.parentElement.innerHTML='<p style=color:#dc3545;font-size:0.85rem>⚠️ Image not loading - check the URL</p>'">`;
+                var img = document.createElement('img');
+                img.src = url;
+                img.alt = 'Preview';
+                img.onerror = function() { preview.innerHTML = '<p style="color:#dc3545;font-size:0.85rem">Image not loading - check the URL</p>'; };
+                preview.innerHTML = '';
+                preview.appendChild(img);
+            } else {
+                preview.innerHTML = '';
+            }
+        });
+        
+        function previewCatImage(cat) {
+            var capCat = cat.charAt(0).toUpperCase() + cat.slice(1);
+            var url = document.getElementById('cat' + capCat + 'Image').value;
+            var preview = document.getElementById('cat' + capCat + 'Preview');
+            if (url) {
+                var img = document.createElement('img');
+                img.src = url;
+                img.alt = 'Preview';
+                img.onerror = function() { preview.innerHTML = '<p style="color:#dc3545;font-size:0.85rem">Image not loading</p>'; };
+                preview.innerHTML = '';
+                preview.appendChild(img);
             } else {
                 preview.innerHTML = '';
             }
         }
         
+        document.getElementById('catHayImage').addEventListener('input', function() { previewCatImage('hay'); });
+        document.getElementById('catShavingsImage').addEventListener('input', function() { previewCatImage('shavings'); });
+        document.getElementById('catGrainImage').addEventListener('input', function() { previewCatImage('grain'); });
+
+        // --- Products ---
+        
         async function loadProducts() {
-            const list = document.getElementById('productList');
-            
+            if (!db) return;
+            var list = document.getElementById('productList');
             try {
-                const { data, error } = await supabase
-                    .from('products')
-                    .select('*')
-                    .order('created_at', { ascending: false });
-                
-                if (error) throw error;
-                
-                products = data || [];
+                var result = await db.from('products').select('*').order('created_at', { ascending: false });
+                if (result.error) throw result.error;
+                products = result.data || [];
                 renderProducts();
             } catch (err) {
                 console.error(err);
-                list.innerHTML = `<div class="empty">⚠️ Error loading products: ${err.message}</div>`;
+                list.innerHTML = '<div class="empty">Error loading products: ' + err.message + '</div>';
             }
         }
         
         function renderProducts() {
-            const list = document.getElementById('productList');
+            var list = document.getElementById('productList');
             if (products.length === 0) {
-                list.innerHTML = '<div class="empty">No products yet. Add your first one above! 👆</div>';
+                list.innerHTML = '<div class="empty">No products yet. Add your first one above!</div>';
                 return;
             }
-            list.innerHTML = products.map(p => `
-                <div class="product-item">
-                    <img src="${p.image_url || '/images/IMG_7197.jpg'}" alt="${p.name}" onerror="this.src='/images/IMG_7197.jpg'">
-                    <div class="info">
-                        <span class="stock-badge ${p.in_stock ? 'in' : 'out'}">${p.in_stock ? '✓ Showing' : '✗ Hidden'}</span>
-                        <h3>${p.name}</h3>
-                        <p>${p.description || 'No description'}</p>
-                        <p class="price">${p.price || 'Call for pricing'}</p>
-                    </div>
-                    <div class="actions">
-                        <button class="btn btn-edit btn-sm" onclick='editProduct(${JSON.stringify(p).replace(/'/g, "&#39;")})'>Edit</button>
-                        <button class="btn btn-sm ${p.in_stock ? 'btn-secondary' : ''}" onclick="toggleStock('${p.id}', ${!p.in_stock})">${p.in_stock ? 'Hide' : 'Show'}</button>
-                        <button class="btn btn-danger btn-sm" onclick="deleteProduct('${p.id}', '${p.name.replace(/'/g, "\\'")}')">Delete</button>
-                    </div>
-                </div>
-            `).join('');
+            list.innerHTML = '';
+            products.forEach(function(p) {
+                var item = document.createElement('div');
+                item.className = 'product-item';
+                
+                var img = document.createElement('img');
+                img.src = p.image_url || '/images/IMG_7197.jpg';
+                img.alt = p.name;
+                img.onerror = function() { this.src = '/images/IMG_7197.jpg'; };
+                item.appendChild(img);
+                
+                var info = document.createElement('div');
+                info.className = 'info';
+                info.innerHTML = '<span class="stock-badge ' + (p.in_stock ? 'in' : 'out') + '">' + (p.in_stock ? 'Showing' : 'Hidden') + '</span>' +
+                    '<h3>' + escapeHtml(p.name) + '</h3>' +
+                    '<p>' + escapeHtml(p.description || 'No description') + '</p>' +
+                    '<p class="price">' + escapeHtml(p.price || 'Call for pricing') + '</p>';
+                item.appendChild(info);
+                
+                var actions = document.createElement('div');
+                actions.className = 'actions';
+                
+                var editBtn = document.createElement('button');
+                editBtn.className = 'btn btn-edit btn-sm';
+                editBtn.textContent = 'Edit';
+                editBtn.addEventListener('click', function() { editProduct(p); });
+                actions.appendChild(editBtn);
+                
+                var toggleBtn = document.createElement('button');
+                toggleBtn.className = 'btn btn-sm' + (p.in_stock ? ' btn-secondary' : '');
+                toggleBtn.textContent = p.in_stock ? 'Hide' : 'Show';
+                toggleBtn.addEventListener('click', function() { toggleStock(p.id, !p.in_stock); });
+                actions.appendChild(toggleBtn);
+                
+                var delBtn = document.createElement('button');
+                delBtn.className = 'btn btn-danger btn-sm';
+                delBtn.textContent = 'Delete';
+                delBtn.addEventListener('click', function() { deleteProduct(p.id, p.name); });
+                actions.appendChild(delBtn);
+                
+                item.appendChild(actions);
+                list.appendChild(item);
+            });
+        }
+        
+        function escapeHtml(str) {
+            var div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
         }
         
         function editProduct(product) {
@@ -277,34 +365,37 @@
             document.getElementById('imageUrl').value = product.image_url || '';
             document.getElementById('inStock').checked = product.in_stock;
             
-            document.getElementById('formTitle').textContent = '✏️ Edit Product';
+            document.getElementById('formTitle').textContent = 'Edit Product';
             document.getElementById('submitBtn').textContent = 'Save Changes';
             document.getElementById('cancelBtn').style.display = 'block';
             
-            previewImage();
+            imageUrlInput.dispatchEvent(new Event('input'));
             document.getElementById('addProductCard').scrollIntoView({ behavior: 'smooth' });
         }
         
         function cancelEdit() {
             document.getElementById('productForm').reset();
             document.getElementById('editId').value = '';
-            document.getElementById('formTitle').textContent = '➕ Add New Product';
+            document.getElementById('formTitle').textContent = 'Add New Product';
             document.getElementById('submitBtn').textContent = 'Add Product';
             document.getElementById('cancelBtn').style.display = 'none';
             document.getElementById('inStock').checked = true;
             document.getElementById('imagePreview').innerHTML = '';
         }
         
+        document.getElementById('cancelBtn').addEventListener('click', cancelEdit);
+        
         document.getElementById('productForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const btn = document.getElementById('submitBtn');
-            const editId = document.getElementById('editId').value;
-            const isEdit = editId !== '';
+            if (!db) { showAlert('Database not connected', 'error'); return; }
+            var btn = document.getElementById('submitBtn');
+            var editId = document.getElementById('editId').value;
+            var isEdit = editId !== '';
             
             btn.disabled = true;
             btn.textContent = isEdit ? 'Saving...' : 'Adding...';
             
-            const productData = {
+            var productData = {
                 name: document.getElementById('name').value.trim(),
                 category: document.getElementById('category').value,
                 description: document.getElementById('description').value.trim(),
@@ -314,15 +405,14 @@
             };
             
             try {
-                let error;
+                var result;
                 if (isEdit) {
-                    ({ error } = await supabase.from('products').update(productData).eq('id', editId));
+                    result = await db.from('products').update(productData).eq('id', editId);
                 } else {
-                    ({ error } = await supabase.from('products').insert([productData]));
+                    result = await db.from('products').insert([productData]);
                 }
-                
-                if (error) throw error;
-                showAlert(isEdit ? '✓ Product updated!' : '✓ Product added!', 'success');
+                if (result.error) throw result.error;
+                showAlert(isEdit ? 'Product updated!' : 'Product added!', 'success');
                 cancelEdit();
                 loadProducts();
             } catch (err) {
@@ -334,10 +424,11 @@
         });
         
         async function toggleStock(id, inStock) {
+            if (!db) return;
             try {
-                const { error } = await supabase.from('products').update({ in_stock: inStock }).eq('id', id);
-                if (error) throw error;
-                showAlert(inStock ? '✓ Now showing on website' : '✓ Hidden from website', 'success');
+                var result = await db.from('products').update({ in_stock: inStock }).eq('id', id);
+                if (result.error) throw result.error;
+                showAlert(inStock ? 'Now showing on website' : 'Hidden from website', 'success');
                 loadProducts();
             } catch (err) {
                 showAlert('Error: ' + err.message, 'error');
@@ -345,46 +436,26 @@
         }
         
         async function deleteProduct(id, name) {
-            if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+            if (!confirm('Delete "' + name + '"? This cannot be undone.')) return;
+            if (!db) return;
             try {
-                const { error } = await supabase.from('products').delete().eq('id', id);
-                if (error) throw error;
-                showAlert('✓ Deleted', 'success');
+                var result = await db.from('products').delete().eq('id', id);
+                if (result.error) throw result.error;
+                showAlert('Deleted', 'success');
                 loadProducts();
             } catch (err) {
                 showAlert('Error: ' + err.message, 'error');
             }
         }
-        
-        function showAlert(msg, type) {
-            const el = document.getElementById('alert');
-            el.textContent = msg;
-            el.className = 'alert alert-' + type;
-            el.style.display = 'block';
-            setTimeout(() => el.style.display = 'none', 4000);
-        }
-        
-        loadProducts();
-        loadCategoryImages();
 
-        function previewCatImage(cat) {
-            const url = document.getElementById('cat' + cat.charAt(0).toUpperCase() + cat.slice(1) + 'Image').value;
-            const preview = document.getElementById('cat' + cat.charAt(0).toUpperCase() + cat.slice(1) + 'Preview');
-            if (url) {
-                preview.innerHTML = `<img src="${url}" alt="Preview" onerror="this.parentElement.innerHTML='<p style=color:#dc3545;font-size:0.85rem>⚠️ Image not loading</p>'">`;
-            } else {
-                preview.innerHTML = '';
-            }
-        }
-
+        // --- Category Images ---
+        
         async function loadCategoryImages() {
+            if (!db) return;
             try {
-                const { data } = await supabase
-                    .from('site_settings')
-                    .select('key, value')
-                    .in('key', ['cat_hay_image', 'cat_shavings_image', 'cat_grain_image']);
-                if (!data) return;
-                data.forEach(s => {
+                var result = await db.from('site_settings').select('key, value').in('key', ['cat_hay_image', 'cat_shavings_image', 'cat_grain_image']);
+                if (!result.data) return;
+                result.data.forEach(function(s) {
                     if (s.key === 'cat_hay_image' && s.value) {
                         document.getElementById('catHayImage').value = s.value;
                         previewCatImage('hay');
@@ -400,22 +471,25 @@
                 });
             } catch (e) { /* table may not exist yet */ }
         }
-
-        async function saveCategoryImages() {
-            const settings = [
+        
+        document.getElementById('saveCatBtn').addEventListener('click', async function() {
+            if (!db) { showAlert('Database not connected', 'error'); return; }
+            var settings = [
                 { key: 'cat_hay_image', value: document.getElementById('catHayImage').value.trim() },
                 { key: 'cat_shavings_image', value: document.getElementById('catShavingsImage').value.trim() },
                 { key: 'cat_grain_image', value: document.getElementById('catGrainImage').value.trim() }
             ];
             try {
-                for (const s of settings) {
-                    await supabase.from('site_settings').update({ value: s.value }).eq('key', s.key);
+                for (var i = 0; i < settings.length; i++) {
+                    await db.from('site_settings').update({ value: settings[i].value }).eq('key', settings[i].key);
                 }
-                showAlert('✓ Category photos saved! Changes are live on the homepage.', 'success');
+                showAlert('Category photos saved! Changes are live on the homepage.', 'success');
             } catch (err) {
                 showAlert('Error saving: ' + err.message, 'error');
             }
-        }
+        });
+        
+    })();
     </script>
 </body>
 </html>
